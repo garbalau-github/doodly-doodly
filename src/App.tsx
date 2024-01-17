@@ -1,47 +1,40 @@
 import { useEffect, useState } from 'react'
-import './App.css'
 
-function App() {
+type Grid = string[][];
 
-  const emptyGrid = Array(7)
+type Player = 'R' | 'Y';
+
+const App = () => {
+
+  const EMPTY_GRID = Array(7)
     .fill('')
     .map(() => Array(6).fill('E'));
 
-
-  // TODO: move the state into the localStorage
-  const [grid, setGrid] = useState(emptyGrid);
-  const [currentPlayer, setCurrentPlayer] = useState('R');
-  const [gameOver, setGameOver] = useState(false);
+  // TODO: move to localStorage
+  const [grid, setGrid] = useState<Grid>(EMPTY_GRID);
+  const [currentPlayer, setCurrentPlayer] = useState<Player>('R');
+  const [score, setScore] = useState<{ R: number, Y: number }>({ R: 0, Y: 0 });
 
   useEffect(() => {
     const isFull = grid.every(row => row.every(cell => cell !== 'E'))
     if (isFull) {
-      setGameOver(true)
-        // TODO: add modal instead of alert
       setTimeout(() => {
         resetGame()
-      }, 1000)
+      }, 5000)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grid]);
 
-  // Function to place a disc in a column
-  function placeDisc(row) {
-    setGrid((prevGrid) => {
+  const placeDisc = (row: number) => {
+    setGrid((prevGrid: Grid) => {
       const newGrid = [...prevGrid];
 
-      // Magic function
-      const suitableCell = newGrid[row].reduceRight((acc, cell, index) => {
-        if (cell === 'E' && acc === -1) {
-          return index;
-        }
-        return acc;
+      const suitableCell = newGrid[row].reduceRight((accumulator, cell, index) => {
+        if (cell === 'E' && accumulator === -1) return index;
+        return accumulator;
       }, -1);
 
-      if (suitableCell === -1) {
-        return newGrid;
-      }
-
-      console.log('rendered', suitableCell)
+      if (suitableCell === -1) return newGrid;
 
       newGrid[row][suitableCell] = currentPlayer;
 
@@ -50,49 +43,41 @@ function App() {
     });
   }
 
-  // Reset the game
-  function resetGame() {
-    setGrid(emptyGrid);
+  const resetGame = () => {
+    setGrid(EMPTY_GRID);
     setCurrentPlayer('R');
-    setGameOver(false);
-    // Reset grid, currentPlayer, and gameOver state
   }
-
-  // Game loop using useEffect
-  // useEffect(() => {
-  // Check for win or draw conditions
-  // Update gameOver state if necessary
-  // Check for the current player's turn
-  // }, [grid, currentPlayer, gameOver]);
 
   return (
     <>
-      <div>
-        <h1>Connet Four</h1>
+      <h2>Doodly Boodly</h2>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }}>
         <div>
-          <div style={{ display: 'flex', border: '1px solid royalblue', padding: '0.5rem', backgroundColor: 'royalblue' }}>
+          <div style={{ display: 'flex', border: '1px solid royalblue', padding: '1rem', backgroundColor: 'royalblue' }}>
             {grid.map((row, rowIndex) => {
               return (
                 <div key={`row${rowIndex}`}>
-                  <button onClick={() => placeDisc(rowIndex)} style={{ fontSize: '10px', padding: '0.25rem 0.5rem', border: '0.5px solid purple' }}>row:{rowIndex}</button>
-                  <br/>
-                  <br/>
+                  <div style={{ fontSize: '10px', padding: '0.5rem 0.75rem', color: 'white' }}>{rowIndex}</div>
                   {row.map((cell, cellIndex) => {
-                    return <div key={`cell${cellIndex}`} style={{ width: "25px", height: '25px', padding: '0.25rem 0.5rem', border: '3px solid royalblue', backgroundColor: cell === 'R' && cell !== 'E' ? 'red' : cell === 'Y' && cell !== 'E' ? 'yellow' : "white", borderRadius: '50%'}} >
-                      {cell !== 'E' ? cell : null}
-                    </div>;
+                    return <div
+                      onClick={() => placeDisc(rowIndex)}
+                      key={`cell${cellIndex}`}
+                      style={{ cursor: 'pointer', width: "25px", height: '25px', padding: '0.25rem 0.25rem', border: '4px solid royalblue', backgroundColor: cell === 'R' ? 'orangered' : cell === 'Y' ? 'yellow' : "white", borderRadius: '50%' }} />
                   })}
                 </div>
               );
             })}
           </div>
-          <div>
-            {/* {gameOver && <h2>Game Over</h2>} */}
-            <h3 style={{color:  currentPlayer === 'R' && currentPlayer !== 'E' ? 'red' : currentPlayer === 'Y' && currentPlayer !== 'E' ? 'yellow' : null}}>Current Player: {currentPlayer}</h3>
+          <div style={{ backgroundColor: '#111', padding: '1rem' }}>
+            <span style={{ color: currentPlayer === 'R' ? 'orangered' : currentPlayer === 'Y' ? 'yellow' : 'black' }}>{currentPlayer}</span>
           </div>
         </div>
-        <button onClick={resetGame}>Reset Game</button>
-
+        <div style={{ backgroundColor: '#111', padding: '1rem' }}>
+          <p style={{color: 'white'}}>Score</p>
+          <p style={{color: 'white'}}><span style={{color: 'orangered'}}>R</span> {score.R}</p>
+          <p style={{color: 'white'}}><span style={{color: 'yellow'}}>Y </span>{score.Y}</p>
+          <button onClick={resetGame}>Reset Game</button>
+        </div>
       </div>
     </>
   )
